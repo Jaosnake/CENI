@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AssemblyName>CENI</AssemblyName>
     <TargetFramework>netstandard2.1</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
@@ -62,7 +63,7 @@
     <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
       <Output TaskParameter="Assemblies" ItemName="AssemblyInfo" />
     </GetAssemblyIdentity>
-    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="powershell -Command &quot;(gc ../thunderstore.toml) -replace '(versionNumber\s*=\s*)\&quot;.*?\&quot;', '$1\&quot;$([System.Version]::Parse(%(AssemblyInfo.Version)).ToString(3))\&quot;' | Out-File ../thunderstore.toml&quot;" />
+    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="powershell -Command &quot;(gc ../thunderstore.toml) -replace '(versionNumber\s*=\s*)\&quot;.*?\&quot;', '$1\&quot;$([System.Version]::Parse(%(AssemblyInfo.Version)).ToString(3))\&quot;' | Out-File ../thunderstore.toml -Encoding utf8&quot;" />
     <Exec Condition="'$(OS)' == 'Unix'" Command="sed -i -E &quot;s/(versionNumber\s*=\s*)\&quot;.*?\&quot;/\1\&quot;$([System.Version]::Parse(%(AssemblyInfo.Version)).ToString(3))\&quot;/&quot; ../thunderstore.toml" />
   </Target>
 </Project>

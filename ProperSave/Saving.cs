@@ -6,6 +6,7 @@ using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using RoR2.UI;
 using ProperSave.Data;
+using UnityEngine;
 
 namespace ProperSave
 {
@@ -53,20 +54,11 @@ namespace ProperSave
         {
             try
             {
-                var metadata = ProperSavePlugin.CurrentSave;
-                if (metadata != null && metadata.FilePath.HasValue)
-                {
-                    if (ProperSavePlugin.SavesFileSystem.FileExists(metadata.FilePath.Value))
-                    {
-                        ProperSavePlugin.SavesFileSystem.DeleteFile(metadata.FilePath.Value);
-                    }
-                    ProperSavePlugin.CurrentSave = null;
-                    SaveFileMetadata.SavesMetadata.Remove(metadata);
-                }
+                ProperSavePlugin.CurrentSave = null;
             }
             catch (Exception e)
             {
-                ProperSavePlugin.InstanceLogger.LogWarning("Failed to delete save file");
+                ProperSavePlugin.InstanceLogger.LogWarning("Failed to clear current save state");
                 ProperSavePlugin.InstanceLogger.LogError(e);
             }
         }
@@ -110,10 +102,9 @@ namespace ProperSave
 
         private static void SaveGame()
         {
-            var oldMetadata = SaveFileMetadata.GetCurrentLobbySaveMetadata();
             var metadata = new SaveFileMetadata
             {
-                FileName = oldMetadata?.FileName,
+                FileName = null,
             };
             metadata.FillMetadataForCurrentLobby();
 
@@ -121,7 +112,8 @@ namespace ProperSave
             {
                 metadata.Write(ProperSavePlugin.Resilient.Value);
                 ProperSavePlugin.CurrentSave = metadata;
-                SaveFileMetadata.Replace(metadata, oldMetadata);
+                SaveFileMetadata.Replace(metadata, null);
+                SaveFileMetadata.PruneCurrentSaveGroup(metadata);
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage { baseToken = string.Format(Language.GetString(LanguageConsts.PROPER_SAVE_CHAT_SAVE), Language.GetString(SceneCatalog.currentSceneDef.nameToken)) });
             }
             catch (Exception e)
@@ -148,6 +140,8 @@ namespace ProperSave
 
         private static void AddQuitText(SimpleDialogBox simpleDialogBox)
         {
+            AddQuitCancelWatcher(simpleDialogBox);
+
             if (!NetworkServer.active && NetworkUser.readOnlyInstancesList.Count != NetworkUser.readOnlyLocalPlayersList.Count)
             {
                 return;
@@ -163,6 +157,46 @@ namespace ProperSave
                 return;
             }
             simpleDialogBox.descriptionLabel.text += Language.GetStringFormatted(LanguageConsts.PROPER_SAVE_QUIT_DIALOG_SAVED_BEFORE, new[] { (Run.instance.stageClearCount - ProperSavePlugin.CurrentSave.Header.StageClearCount).ToString() });
+        }
+
+        private static void AddQuitCancelWatcher(SimpleDialogBox simpleDialogBox)
+        {
+            var root = simpleDialogBox.rootObject != null ? simpleDialogBox.rootObject : simpleDialogBox.gameObject;
+            if (root.GetComponent<QuitCancelWatcher>() != null)
+            {
+                return;
+            }
+
+            var watcher = root.AddComponent<QuitCancelWatcher>();
+            watcher.dialog = simpleDialogBox;
+        }
+
+        private class QuitCancelWatcher : MonoBehaviour
+        {
+            public SimpleDialogBox dialog;
+            private float delay = 0.25f;
+            private bool closing;
+
+            private void Update()
+            {
+                if (closing)
+                {
+                    return;
+                }
+
+                delay -= Time.unscaledDeltaTime;
+                if (delay > 0f)
+                {
+                    return;
+                }
+
+                if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.JoystickButton1))
+                {
+                    closing = true;
+                    var target = dialog.rootObject != null ? dialog.rootObject : dialog.gameObject;
+                    Destroy(target);
+                }
+            }
         }
     }
 }

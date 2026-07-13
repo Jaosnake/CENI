@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Zio;
 using System.IO;
+using ProperSave.Data;
 
 namespace ProperSave
 {
@@ -47,44 +48,170 @@ namespace ProperSave
 
         internal static SaveFileMetadata GetCurrentLobbySaveMetadata(NetworkUser exceptUser = null)
         {
+            return GetCurrentLobbySaveMetadatas(exceptUser).FirstOrDefault();
+        }
+
+        internal static List<SaveFileMetadata> GetCurrentLobbySaveMetadatas(NetworkUser exceptUser = null)
+        {
             try
             {
-                var users = NetworkUser.readOnlyInstancesList.Select(el => el.id).ToList();
-                if (exceptUser != null)
+                if (!TryGetCurrentLobbyIdentity(exceptUser, out var users, out var bodies, out var profile, out var gameMode))
                 {
-                    users.Remove(exceptUser.id);
-                }
-                if (users.Count == 0)
-                {
-                    return null;
-                }
-                var gameMode = PreGameController.instance ? PreGameController.instance.gameModeIndex : Run.instance ? Run.instance.gameModeIndex : GameModeIndex.Invalid;
-                if (gameMode == GameModeIndex.Invalid)
-                {
-                    return null;
+                    return new List<SaveFileMetadata>();
                 }
 
-                if (users.Count == 1)
-                {
-                    var profile = System.IO.Path.GetFileNameWithoutExtension(LocalUserManager.readOnlyLocalUsersList[0].userProfile.fileName);
-                    return SavesMetadata.FirstOrDefault(el => el.Header.UserProfileId == profile && el.Header.Users.Length == 1 && el.Header.GameMode == gameMode);
-                }
-
-                return SavesMetadata.FirstOrDefault(el =>
-                {
-                    if (el.Header.Users.Length != users.Count || el.Header.GameMode != gameMode)
-                    {
-                        return false;
-                    }
-                    return users.DifferenceCount(el.Header.Users.Select(e => e?.UserId?.Load() ?? default)) == 0;
-                });
+                return SavesMetadata
+                    .Where(el => IsSameSaveGroup(el, users, bodies, profile, gameMode))
+                    .OrderByDescending(el => el.Header.StageClearCount)
+                    .ThenByDescending(el => el.Header.Time)
+                    .ThenByDescending(el => el.Header.SaveDate)
+                    .Take(ProperSavePlugin.MaxSaveSlotsPerCharacter)
+                    .ToList();
             }
             catch (Exception ex)
             {
                 ProperSavePlugin.InstanceLogger.LogWarning("Couldn't get save metadata for current lobby");
                 ProperSavePlugin.InstanceLogger.LogError(ex.ToString());
-                return null;
+                return new List<SaveFileMetadata>();
             }
+        }
+
+        internal static void PruneCurrentSaveGroup(SaveFileMetadata keepMetadata)
+        {
+            if (keepMetadata?.Header == null)
+            {
+                return;
+            }
+
+            var keep = SavesMetadata
+                .Where(el => IsSameSaveGroup(el, keepMetadata))
+                .OrderByDescending(el => el.Header.SaveDate)
+                .Take(ProperSavePlugin.MaxSaveSlotsPerCharacter)
+                .ToHashSet();
+
+            var toDelete = SavesMetadata
+                .Where(el => IsSameSaveGroup(el, keepMetadata) && !keep.Contains(el))
+                .ToList();
+
+            foreach (var metadata in toDelete)
+            {
+                try
+                {
+                    if (metadata.FilePath.HasValue && ProperSavePlugin.SavesFileSystem.FileExists(metadata.FilePath.Value))
+                    {
+                        ProperSavePlugin.SavesFileSystem.DeleteFile(metadata.FilePath.Value);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ProperSavePlugin.InstanceLogger.LogWarning($"Failed to delete old save file \"{metadata.FileName}\"");
+                    ProperSavePlugin.InstanceLogger.LogError(ex);
+                }
+
+                SavesMetadata.Remove(metadata);
+            }
+        }
+
+        internal static bool DeleteSave(SaveFileMetadata metadata)
+        {
+            if (metadata == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                if (metadata.FilePath.HasValue && ProperSavePlugin.SavesFileSystem.FileExists(metadata.FilePath.Value))
+                {
+                    ProperSavePlugin.SavesFileSystem.DeleteFile(metadata.FilePath.Value);
+                }
+
+                SavesMetadata.Remove(metadata);
+                if (ProperSavePlugin.CurrentSave == metadata)
+                {
+                    ProperSavePlugin.CurrentSave = null;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ProperSavePlugin.InstanceLogger.LogWarning($"Failed to delete save file \"{metadata.FileName}\"");
+                ProperSavePlugin.InstanceLogger.LogError(ex);
+                return false;
+            }
+        }
+
+        private static bool TryGetCurrentLobbyIdentity(NetworkUser exceptUser, out List<NetworkUserId> users, out List<BodyIndex> bodies, out string profile, out GameModeIndex gameMode)
+        {
+            users = NetworkUser.readOnlyInstancesList.Select(el => el.id).ToList();
+            bodies = PlayerCharacterMasterController.instances
+                .Select(el => el.master?.bodyPrefab ? el.master.bodyPrefab.GetComponent<CharacterBody>()?.bodyIndex ?? BodyIndex.None : BodyIndex.None)
+                .Where(el => el != BodyIndex.None)
+                .ToList();
+            profile = null;
+            gameMode = PreGameController.instance ? PreGameController.instance.gameModeIndex : Run.instance ? Run.instance.gameModeIndex : GameModeIndex.Invalid;
+
+            if (exceptUser != null)
+            {
+                users.Remove(exceptUser.id);
+            }
+
+            if (users.Count == 0 || gameMode == GameModeIndex.Invalid)
+            {
+                return false;
+            }
+
+            if (users.Count == 1 && LocalUserManager.readOnlyLocalUsersList.Count > 0)
+            {
+                profile = System.IO.Path.GetFileNameWithoutExtension(LocalUserManager.readOnlyLocalUsersList[0].userProfile.fileName);
+            }
+
+            return true;
+        }
+
+        private static bool IsSameSaveGroup(SaveFileMetadata metadata, List<NetworkUserId> users, List<BodyIndex> bodies, string profile, GameModeIndex gameMode)
+        {
+            if (metadata?.Header == null || metadata.Header.Users == null)
+            {
+                return false;
+            }
+            if (metadata.Header.Users.Length != users.Count || metadata.Header.GameMode != gameMode)
+            {
+                return false;
+            }
+
+            if (users.Count == 1)
+            {
+                return metadata.Header.UserProfileId == profile &&
+                       metadata.Header.Users.Length == 1 &&
+                       (bodies.Count == 0 || metadata.Header.Users[0].Body == bodies[0]);
+            }
+
+            return users.DifferenceCount(metadata.Header.Users.Select(e => e?.UserId?.Load() ?? default)) == 0 &&
+                   (bodies.Count == 0 || bodies.DifferenceCount(metadata.Header.Users.Select(e => e?.Body ?? BodyIndex.None)) == 0);
+        }
+
+        private static bool IsSameSaveGroup(SaveFileMetadata left, SaveFileMetadata right)
+        {
+            if (left?.Header == null || right?.Header == null)
+            {
+                return false;
+            }
+            if (left.Header.GameMode != right.Header.GameMode || left.Header.Users.Length != right.Header.Users.Length)
+            {
+                return false;
+            }
+            if (left.Header.Users.Length == 1)
+            {
+                return left.Header.UserProfileId == right.Header.UserProfileId &&
+                       left.Header.Users[0].Body == right.Header.Users[0].Body;
+            }
+
+            return left.Header.Users.Select(e => e?.UserId?.Load() ?? default)
+                       .DifferenceCount(right.Header.Users.Select(e => e?.UserId?.Load() ?? default)) == 0 &&
+                   left.Header.Users.Select(e => e?.Body ?? BodyIndex.None)
+                       .DifferenceCount(right.Header.Users.Select(e => e?.Body ?? BodyIndex.None)) == 0;
         }
 
         internal static void PopulateSavesMetadata()

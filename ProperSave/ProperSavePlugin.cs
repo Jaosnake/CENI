@@ -24,9 +24,10 @@ namespace ProperSave
     [BepInPlugin(GUID, Name, Version)]
     public class ProperSavePlugin : BaseUnityPlugin
     {
-        public const string GUID = "com.KingEnderBrine.ProperSave";
-        public const string Name = "Proper Save";
-        public const string Version = "3.0.4";
+        public const string GUID = "com.Jaosnake.CENI";
+        public const string Name = "C.E.N.I";
+        public const string Version = "1.0.0";
+        internal const int MaxSaveSlotsPerCharacter = 5;
 
         private static readonly char[] invalidSubDirectoryCharacters = new[] { '\\', '/', '.' };
 

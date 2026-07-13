@@ -14,5 +14,19 @@
         public static readonly string PROPER_SAVE_TOOLTIP_LOAD_DESCRIPTION_CHARACTER = nameof(PROPER_SAVE_TOOLTIP_LOAD_DESCRIPTION_CHARACTER);
         public static readonly string PROPER_SAVE_TOOLTIP_LOAD_CONTENT_MISMATCH = nameof(PROPER_SAVE_TOOLTIP_LOAD_CONTENT_MISMATCH);
         public static readonly string PROPER_SAVE_CHAT_SAVE_FAILED = nameof(PROPER_SAVE_CHAT_SAVE_FAILED);
+        public static readonly string PROPER_SAVE_SELECT_SAVE_TITLE = nameof(PROPER_SAVE_SELECT_SAVE_TITLE);
+        public static readonly string PROPER_SAVE_SELECT_SAVE_DESCRIPTION = nameof(PROPER_SAVE_SELECT_SAVE_DESCRIPTION);
+        public static readonly string PROPER_SAVE_SELECT_SAVE_BUTTON = nameof(PROPER_SAVE_SELECT_SAVE_BUTTON);
+        public static readonly string PROPER_SAVE_SELECT_SAVE_CANCEL = nameof(PROPER_SAVE_SELECT_SAVE_CANCEL);
+        public static readonly string PROPER_SAVE_DELETE_SAVE = nameof(PROPER_SAVE_DELETE_SAVE);
+        public static readonly string PROPER_SAVE_DELETE_SAVE_TITLE = nameof(PROPER_SAVE_DELETE_SAVE_TITLE);
+        public static readonly string PROPER_SAVE_DELETE_SAVE_DESCRIPTION = nameof(PROPER_SAVE_DELETE_SAVE_DESCRIPTION);
+        public static readonly string PROPER_SAVE_DELETE_CONFIRM_TITLE = nameof(PROPER_SAVE_DELETE_CONFIRM_TITLE);
+        public static readonly string PROPER_SAVE_DELETE_CONFIRM_DESCRIPTION = nameof(PROPER_SAVE_DELETE_CONFIRM_DESCRIPTION);
+        public static readonly string PROPER_SAVE_DELETE_CONFIRM_YES = nameof(PROPER_SAVE_DELETE_CONFIRM_YES);
+        public static readonly string PROPER_SAVE_SELECT_HINT = nameof(PROPER_SAVE_SELECT_HINT);
+        public static readonly string PROPER_SAVE_BACK_HINT = nameof(PROPER_SAVE_BACK_HINT);
+        public static readonly string PROPER_SAVE_MOUSE_SELECT_HINT = nameof(PROPER_SAVE_MOUSE_SELECT_HINT);
+        public static readonly string PROPER_SAVE_ESC_HINT = nameof(PROPER_SAVE_ESC_HINT);
     }
 }

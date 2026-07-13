@@ -91,6 +91,12 @@ namespace ProperSave
 
         internal static IEnumerator LoadLobby()
         {
+            var metadata = SaveFileMetadata.GetCurrentLobbySaveMetadata();
+            yield return LoadLobby(metadata);
+        }
+
+        internal static IEnumerator LoadLobby(SaveFileMetadata metadata)
+        {
             if (PreGameController.instance == null)
             {
                 ProperSavePlugin.InstanceLogger.LogInfo("PreGameController instance not found");
@@ -102,7 +108,6 @@ namespace ProperSave
                 yield break;
             }
 
-            var metadata = SaveFileMetadata.GetCurrentLobbySaveMetadata();
             if (metadata == null)
             {
                 ProperSavePlugin.InstanceLogger.LogInfo("Save file for current users is not found");
@@ -133,7 +138,7 @@ namespace ProperSave
             PreGameController.instance.StartRun();
         }
 
-        [ConCommand(commandName = "ps_force_load", flags = ConVarFlags.SenderMustBeServer, helpText = "[ProperSave] Load save from specified file ignoring user identifier.")]
+        [ConCommand(commandName = "ceni_force_load", flags = ConVarFlags.SenderMustBeServer, helpText = "[C.E.N.I] Load save from specified file ignoring user identifier.")]
         internal static void LoadForce(ConCommandArgs args)
         {
             var path = args.TryGetArgString(0);
