@@ -1,3 +1,8 @@
+**1.0.1**
+
+- Corrected English spelling and improved the wording of two Brazilian Portuguese save descriptions.
+- Normalized the English translation file to UTF-8 without BOM.
+
 **1.0.0**
 
 - Initial C.E.N.I release.

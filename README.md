@@ -37,7 +37,7 @@ Do not install this together with the original ProperSave unless you intentional
 
 ## Credits and source
 
-Based on [ProperSave by KingEnderBrine](https://github.com/KingEnderBrine/-RoR2-ProperSave). C.E.N.I is an independent fork with its own package identity and UI/save-management extensions. See `NOTICE.md` for attribution details.
+Based on [ProperSave by KingEnderBrine](https://github.com/KingEnderBrine/-RoR2-ProperSave). C.E.N.I is an independent fork with its own package identity and UI/save-management extensions. The upstream repository does not include an explicit license file. This attribution does not grant rights beyond those provided by the respective authors; obtain permission from the upstream author before redistributing the fork if required by their intended licensing terms.
 
 ---
 
@@ -80,4 +80,4 @@ Não instale este mod junto com o ProperSave original, exceto para testes intenc
 
 ## Créditos e código-fonte
 
-Baseado no [ProperSave, de KingEnderBrine](https://github.com/KingEnderBrine/-RoR2-ProperSave). C.E.N.I é um fork independente, com identidade própria de pacote e extensões de interface e gerenciamento de saves. Consulte `NOTICE.md` para os detalhes de atribuição.
+Baseado no [ProperSave, de KingEnderBrine](https://github.com/KingEnderBrine/-RoR2-ProperSave). C.E.N.I é um fork independente, com identidade própria de pacote e extensões de interface e gerenciamento de saves. O repositório original não inclui uma licença explícita. Esta atribuição não concede direitos além daqueles fornecidos pelos respectivos autores; obtenha permissão do autor original para redistribuição se exigida pelos termos pretendidos por ele.

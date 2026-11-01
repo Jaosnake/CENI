@@ -4,7 +4,7 @@ schemaVersion = "0.0.1"
 [package]
 namespace = "Jaosnake"
 name = "CENI"
-versionNumber = "1.0.0"
+versionNumber = "1.0.1"
 description = "Stage save states with a selectable UI, five slots per character, controller support, and pt-BR localization."
 websiteUrl = "https://github.com/Jaosnake/CENI"
 containsNsfwContent = false
@@ -29,10 +29,6 @@ target = "./plugins/CENI/"
 [[build.copy]]
 source = "./CHANGELOG.md"
 target = "./CHANGELOG.md"
-
-[[build.copy]]
-source = "./NOTICE.md"
-target = "./NOTICE.md"
 
 [publish]
 repository = "https://thunderstore.io"
