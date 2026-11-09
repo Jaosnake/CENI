@@ -1,4 +1,4 @@
-﻿using ProperSave.SaveData;
+using ProperSave.SaveData;
 using RoR2;
 using System;
 using UnityEngine.Networking;
@@ -113,6 +113,7 @@ namespace ProperSave
                 metadata.Write(ProperSavePlugin.Resilient.Value);
                 ProperSavePlugin.CurrentSave = metadata;
                 SaveFileMetadata.Replace(metadata, null);
+                ProperSavePlugin.InstanceLogger.LogInfo($"Saved game file {metadata.FileName} (scene={metadata.Header?.SceneName}, stageClear={metadata.Header?.StageClearCount}, time={metadata.Header?.Time}s)");
                 SaveFileMetadata.PruneCurrentSaveGroup(metadata);
                 Chat.SendBroadcastChat(new Chat.SimpleChatMessage { baseToken = string.Format(Language.GetString(LanguageConsts.PROPER_SAVE_CHAT_SAVE), Language.GetString(SceneCatalog.currentSceneDef.nameToken)) });
             }

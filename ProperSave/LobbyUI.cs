@@ -20,6 +20,7 @@ namespace ProperSave
         private static GamepadTooltipProvider gamepadTooltipProvider;
         private static SaveFileMetadata lastFileMetadata;
         private static TooltipContent lastTooltipContent;
+        private static bool mainMenuMode;
 
         private const float DialogWidth = 640f;
         private const float SaveButtonHeight = 86f;
@@ -123,22 +124,26 @@ namespace ProperSave
                 lobbyGlyphAndDescription.SetActive(true);
 
                 var glyph = lobbyGlyphAndDescription.transform.GetChild(0).GetComponent<InputBindingDisplayController>();
-                glyph.actionName = "UISubmitTertiary";
+                glyph.actionName = "Equipment";
+                glyph.axisRange = Rewired.AxisRange.Full;
+                glyph.useExplicitInputSource = true;
+                glyph.explicitInputSource = MPEventSystem.InputSource.Gamepad;
 
                 var glyph2 = lobbyGlyphAndDescription.transform.GetChild(1);
                 var description = lobbyGlyphAndDescription.transform.GetChild(2).GetComponent<LanguageTextMeshController>();
-                GameObject.Destroy(glyph2.gameObject);
+                glyph2.SetSiblingIndex(2);
+                GameObject.DestroyImmediate(glyph2.gameObject);
 
                 description.token = LanguageConsts.PROPER_SAVE_TITLE_LOAD;
 
-                for (var i = 1; i < lobbySubmenuLegend.transform.childCount; i++)
+                for (var i = lobbySubmenuLegend.transform.childCount - 1; i >= 1; i--)
                 {
-                    GameObject.Destroy(lobbySubmenuLegend.transform.GetChild(i).gameObject);
+                    GameObject.DestroyImmediate(lobbySubmenuLegend.transform.GetChild(i).gameObject);
                 }
                 #endregion
 
                 var gamepadInputEvent = self.gameObject.AddComponent<HoldGamepadInputEvent>();
-                gamepadInputEvent.actionName = "UISubmitTertiary";
+                gamepadInputEvent.actionName = "Equipment";
                 gamepadInputEvent.enabledObjectsIfActive = Array.Empty<GameObject>();
 
                 gamepadInputEvent.actionEvent = new UnityEngine.Events.UnityEvent();
@@ -169,6 +174,10 @@ namespace ProperSave
                 ProperSavePlugin.InstanceLogger.LogInfo("Already loading");
                 return;
             }
+            if (SimpleDialogBox.instancesList.Count > 0)
+            {
+                return;
+            }
 
             var saves = SaveFileMetadata.GetCurrentLobbySaveMetadatas();
             if (saves.Count == 0)
@@ -177,7 +186,43 @@ namespace ProperSave
                 return;
             }
 
+            mainMenuMode = false;
             ShowSaveSelectionDialog(saves);
+        }
+
+        internal static void ShowMainMenuSaveDialog()
+        {
+            if (Run.instance != null || Loading.IsLoading || SimpleDialogBox.instancesList.Count > 0)
+            {
+                return;
+            }
+
+            var saves = SaveFileMetadata.GetMainMenuSaveMetadatas();
+            if (saves.Count == 0)
+            {
+                ProperSavePlugin.InstanceLogger.LogInfo("No save files found for the current profile");
+                return;
+            }
+
+            mainMenuMode = true;
+            ShowSaveSelectionDialog(saves);
+        }
+
+        private static System.Collections.Generic.List<SaveFileMetadata> GetDialogSaves()
+        {
+            return mainMenuMode ? SaveFileMetadata.GetMainMenuSaveMetadatas() : SaveFileMetadata.GetCurrentLobbySaveMetadatas();
+        }
+
+        private static void StartLoad(SaveFileMetadata save)
+        {
+            if (mainMenuMode)
+            {
+                MainMenuUI.StartLoadFromMainMenu(save);
+            }
+            else
+            {
+                ProperSavePlugin.Instance.StartCoroutine(Loading.LoadLobby(save));
+            }
         }
 
         private static void UpdateLobbyControls(NetworkUser exceptUser = null)
@@ -297,7 +342,7 @@ namespace ProperSave
                 var captured = save;
                 dialog.AddActionButton(() =>
                 {
-                    ProperSavePlugin.Instance.StartCoroutine(Loading.LoadLobby(captured));
+                    StartLoad(captured);
                 }, LanguageConsts.PROPER_SAVE_TITLE_LOAD, destroyDialog: true);
 
                 SetLastButtonContent(dialog, GetSaveButtonDescription(save), GetSavePortrait(save));
@@ -364,14 +409,15 @@ namespace ProperSave
             {
                 SaveFileMetadata.DeleteSave(save);
                 UpdateLobbyControls();
+                MainMenuUI.RefreshButton();
             }, LanguageConsts.PROPER_SAVE_DELETE_CONFIRM_YES, destroyDialog: true);
 
             dialog.AddActionButton(() =>
             {
-                ShowSaveSelectionDialog(SaveFileMetadata.GetCurrentLobbySaveMetadatas());
+                ShowSaveSelectionDialog(GetDialogSaves());
             }, LanguageConsts.PROPER_SAVE_SELECT_SAVE_CANCEL, destroyDialog: true);
 
-            AddCloseWatcher(dialog, () => ShowSaveSelectionDialog(SaveFileMetadata.GetCurrentLobbySaveMetadatas()));
+            AddCloseWatcher(dialog, () => ShowSaveSelectionDialog(GetDialogSaves()));
 
             ProperSavePlugin.Instance.StartCoroutine(DelayedSaveDialogLayout(dialog, confirmLayout: true));
         }

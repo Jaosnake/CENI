@@ -5,6 +5,7 @@
         public static readonly string PROPER_SAVE_TITLE_CONTINUE_DESC = nameof(PROPER_SAVE_TITLE_CONTINUE_DESC);
         public static readonly string PROPER_SAVE_TITLE_CONTINUE = nameof(PROPER_SAVE_TITLE_CONTINUE);
         public static readonly string PROPER_SAVE_TITLE_LOAD = nameof(PROPER_SAVE_TITLE_LOAD);
+        public static readonly string PROPER_SAVE_MAIN_MENU_LOAD = nameof(PROPER_SAVE_MAIN_MENU_LOAD);
         public static readonly string PROPER_SAVE_CHAT_SAVE = nameof(PROPER_SAVE_CHAT_SAVE);
         public static readonly string PROPER_SAVE_QUIT_DIALOG_SAVED = nameof(PROPER_SAVE_QUIT_DIALOG_SAVED);
         public static readonly string PROPER_SAVE_QUIT_DIALOG_SAVED_BEFORE = nameof(PROPER_SAVE_QUIT_DIALOG_SAVED_BEFORE);

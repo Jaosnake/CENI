@@ -19,7 +19,8 @@ namespace ProperSave.Components
 
         public void Start()
         {
-            inputBindingDisplayController.useExplicitInputSource = false;
+            inputBindingDisplayController.useExplicitInputSource = true;
+            inputBindingDisplayController.explicitInputSource = MPEventSystem.InputSource.Gamepad;
             inputEvent.holdStartEvent.AddListener(HoldStart);
             inputEvent.holdEndEvent.AddListener(HoldEnd);
         }

@@ -1,28 +1,43 @@
 # C.E.N.I - Chrono-Enhanced Nexus of Iteration
 
+![Version](https://img.shields.io/badge/%F0%9F%97%82%EF%B8%8F%20Version-1.0.4-blue)
+
+
 **C.E.N.I** is a Risk of Rain 2 save-state mod based on ProperSave, expanded with a save selection UI, controller navigation and Brazilian Portuguese support.
 
 It saves your run at the start of each stage. From the character select lobby, choose **Load** or use the gamepad action bound to it to open the save picker instead of loading blindly.
 
 ## Features
 
-- Keeps up to 5 save states per character/lobby group.
+- Keeps up to 5 save states per character/lobby group, with smart pruning so multi-scene Hidden Realm events do not overwrite normal stage saves.
 - Shows a selectable save list with character, stage name, stage number, run time and difficulty.
 - Shows the survivor portrait when the character or mod provides one.
-- Sorts saves by highest stage first, then time, then save date.
+- Sorts saves by most recent save date first, then stage and run time.
 - Keeps save history after death instead of deleting the latest save immediately.
 - Supports English for all languages and Brazilian Portuguese when `pt-BR` is selected.
 - Supports mouse, keyboard and controller navigation. Use the displayed confirm/back bindings in each dialog.
+- Adds a **Load Save** button to the main menu, below Multiplayer, so you can load a save as soon as you enter the game. The Load option in the Singleplayer lobby still works as before.
 - Lets you delete individual saves from the lobby interface.
 - Supports Classic, Eclipse and Simulacrum save separation through the original ProperSave logic.
 
 ## Usage
 
 1. Start or continue a run normally. C.E.N.I saves at the beginning of each stage.
-2. Return to the character select lobby and choose **Load** to select one of the available saves.
+2. Load a save in either of the two ways below.
 3. Use the delete option to remove a specific save when desired. Deletion is permanent.
 
-Saves are shown newest in progression first: highest stage, then highest run time, then the most recent save date.
+### Load Save from the main menu (new)
+
+A new **Load Save** button now sits right below **Multiplayer** on the main menu, available as soon as you enter the game. It works exactly like the Load option you already know: it opens the same save list (character, stage, number, time and difficulty) with the survivor portraits and the delete option, and picking a save takes you straight into that run, without having to go through the lobby first. The list shows the most recent saves of your profile, from any character. The button stays disabled while your profile has no saves.
+
+![C.E.N.I Load Save button on the main menu](https://raw.githubusercontent.com/Jaosnake/CENI/main/docs/screenshots/main-menu-load-save-ptbr.jpg)
+![C.E.N.I save list opened from the main menu](https://raw.githubusercontent.com/Jaosnake/CENI/main/docs/screenshots/main-menu-select-save-en.jpg)
+
+### Load from the Singleplayer lobby (as before)
+
+The original way still works normally: in the character select lobby, choose **Load** (or use the gamepad action bound to it) and pick one of the available saves.
+
+Saves are shown with the most recent save at the top, followed by highest stage and run time.
 
 ## Languages
 
@@ -49,23 +64,35 @@ O mod salva a jogatina no início de cada fase. No lobby de seleção de persona
 
 ## Recursos
 
-- Mantém até 5 save states por personagem/grupo do lobby.
+- Mantém até 5 save states por personagem/grupo do lobby, com poda inteligente para que subfases de eventos/Reinos Secretos não apaguem os saves das fases normais.
 - Exibe uma lista selecionável com personagem, nome da fase, número da fase, tempo de jogo e dificuldade.
 - Mostra o retrato do sobrevivente quando o personagem ou mod disponibiliza um.
-- Organiza os saves pela fase mais alta, depois pelo maior tempo de jogo e, por fim, pela data mais recente.
+- Organiza os saves pela data de salvamento mais recente no topo, seguida da fase e tempo de jogo.
 - Mantém o histórico de saves depois da morte, em vez de apagar o último save imediatamente.
 - Usa português brasileiro quando `pt-BR` está selecionado e inglês como alternativa para os demais idiomas.
 - Funciona com mouse, teclado e controle. Os atalhos exibidos em cada diálogo indicam confirmar e voltar.
+- Adiciona um botão **Carregar Save** no menu principal, abaixo de Multijogador, para carregar um save assim que você entra no jogo. A opção Carregar no lobby do Um jogador continua funcionando como antes.
 - Permite excluir saves individuais pela interface do lobby.
 - Mantém a separação de saves de Classic, Eclipse e Simulacrum herdada do ProperSave.
 
 ## Como usar
 
 1. Inicie ou continue uma jogatina normalmente. O C.E.N.I salva no começo de cada fase.
-2. Retorne ao lobby de seleção de personagem e escolha **Carregar** para selecionar um save disponível.
+2. Carregue um save por qualquer um dos dois caminhos abaixo.
 3. Use a opção de excluir para remover um save específico quando necessário. A exclusão é permanente.
 
-Os saves aparecem primeiro por progresso: fase mais alta, maior tempo de jogo e, depois, data de salvamento mais recente.
+### Carregar Save pelo menu principal (novo)
+
+Agora existe um botão **Carregar Save** logo abaixo de **Multijogador** no menu principal, disponível assim que você entra no jogo. Ele funciona exatamente como a opção Carregar que você já conhece: abre a mesma lista de saves (personagem, fase, número, tempo e dificuldade) com os retratos dos sobreviventes e a opção de excluir, e escolher um save leva você direto para aquela jogatina, sem precisar passar antes pelo lobby. A lista mostra os saves mais recentes do seu perfil, de qualquer personagem. O botão fica desabilitado enquanto o seu perfil não tiver nenhum save.
+
+![Botão Carregar Save do C.E.N.I no menu principal](https://raw.githubusercontent.com/Jaosnake/CENI/main/docs/screenshots/main-menu-load-save-ptbr.jpg)
+![Lista de saves do C.E.N.I aberta pelo menu principal](https://raw.githubusercontent.com/Jaosnake/CENI/main/docs/screenshots/main-menu-select-save-en.jpg)
+
+### Carregar pelo lobby do Um jogador (como antes)
+
+O jeito original continua funcionando normalmente: no lobby de seleção de personagem, escolha **Carregar** (ou use a ação correspondente no controle) e selecione um dos saves disponíveis.
+
+Os saves aparecem com o salvamento mais recente no topo, seguido pela fase mais alta e tempo de jogo.
 
 ## Idiomas
 

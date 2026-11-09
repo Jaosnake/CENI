@@ -1,3 +1,24 @@
+**1.0.4**
+
+- Added a **Load Save** button to the main menu, right below Multiplayer. It opens the same save list as the lobby Load option (character, stage, number, time, difficulty, portrait and delete) and loads the chosen save straight into the run, without going through the lobby first. It lists the most recent saves of your profile from any character and stays disabled when there are no saves. The Load option in the Singleplayer lobby still works as before.
+- Fixed items, equipment, money and loadout not being restored when loading a save that has allied minions without `AIOwnership` or `BaseAI` (such as some drones and turrets). The error aborted the load before the player's own data was applied. These minions now load safely, and any minion that still fails is skipped and logged without affecting the player.
+- Added `Load Save` / `Carregar Save` localization (English and Brazilian Portuguese) and screenshots of the new menu to the README.
+
+**1.0.3**
+
+- Fixed `SaveFileHeader.SaveDate` not being populated in memory when creating a new save during the current session, which previously prevented older saves from being pruned properly.
+- Improved save pruning and ordering for multi-scene Hidden Realms and DLC4 events so sub-stages with paused timers do not overwrite normal stage saves, and the most recent save is always listed first.
+- Normalized `UserProfileId` comparisons across newly created and on-disk saves.
+
+**1.0.2**
+
+- Fixed game-breaking save failure on stage transition in Risk of Rain 2 v1.5.0 caused by the removal of `Inventory._lastExtraEquipmentCount`.
+- Fixed potential load exception in v1.5.0 caused by changes to `Inventory.activeEquipmentSet`.
+- Fixed gamepad Load legend display issue (`[SEM VÍNC. CONTROLE]` overlap) in the character select lobby by resetting the gamepad axis range and using the dedicated Equipment binding action.
+- Fixed an issue causing allied minions (drones, lemurians) to be dead or despawned after loading a run (aligned with upstream ProperSave 3.1.2).
+- Restored run rulebook and seed reliably on load via `NetworkSession.BeginRun`.
+- Prevented spawning duplicate save-state picker dialogs when pressing the controller Load action rapidly.
+
 **1.0.1**
 
 - Corrected English spelling and improved the wording of two Brazilian Portuguese save descriptions.

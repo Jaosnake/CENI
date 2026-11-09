@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,7 +30,8 @@ namespace ProperSave
                 .Select(HeaderUserData.Create)
                 .Where(el => el != null)
                 .ToArray();
-            UserProfileId = LocalUserManager.readOnlyLocalUsersList[0].userProfile.fileName;
+            SaveDate = DateTime.UtcNow;
+            UserProfileId = System.IO.Path.GetFileNameWithoutExtension(LocalUserManager.readOnlyLocalUsersList[0].userProfile.fileName);
             GameMode = Run.instance.gameModeIndex;
             ContentHash = ProperSavePlugin.ContentHash;
             Difficulty = Run.instance.selectedDifficulty;
@@ -98,7 +99,11 @@ namespace ProperSave
             var currentOffset = writer.BaseStream.Position;
             writer.Write(0L);
 
-            writer.Write(DateTime.UtcNow.Ticks);
+            if (SaveDate == default)
+            {
+                SaveDate = DateTime.UtcNow;
+            }
+            writer.Write(SaveDate.Ticks);
             writer.Write(UserProfileId);
             writer.Write(Users.Length);
             for (var i = 0; i < Users.Length; i++)

@@ -1,4 +1,4 @@
-﻿using RoR2;
+using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,15 +62,45 @@ namespace ProperSave
 
                 return SavesMetadata
                     .Where(el => IsSameSaveGroup(el, users, bodies, profile, gameMode))
-                    .OrderByDescending(el => el.Header.StageClearCount)
+                    .OrderByDescending(el => el.Header.SaveDate)
+                    .ThenByDescending(el => el.Header.StageClearCount)
                     .ThenByDescending(el => el.Header.Time)
-                    .ThenByDescending(el => el.Header.SaveDate)
                     .Take(ProperSavePlugin.MaxSaveSlotsPerCharacter)
                     .ToList();
             }
             catch (Exception ex)
             {
                 ProperSavePlugin.InstanceLogger.LogWarning("Couldn't get save metadata for current lobby");
+                ProperSavePlugin.InstanceLogger.LogError(ex.ToString());
+                return new List<SaveFileMetadata>();
+            }
+        }
+
+        internal static List<SaveFileMetadata> GetMainMenuSaveMetadatas()
+        {
+            try
+            {
+                var localUser = LocalUserManager.readOnlyLocalUsersList.FirstOrDefault();
+                if (localUser?.userProfile == null)
+                {
+                    return new List<SaveFileMetadata>();
+                }
+
+                var profile = System.IO.Path.GetFileNameWithoutExtension(localUser.userProfile.fileName);
+
+                return SavesMetadata
+                    .Where(el => el.Header?.Users != null &&
+                                 el.Header.Users.Length == 1 &&
+                                 el.Header.UserProfileId == profile)
+                    .OrderByDescending(el => el.Header.SaveDate)
+                    .ThenByDescending(el => el.Header.StageClearCount)
+                    .ThenByDescending(el => el.Header.Time)
+                    .Take(ProperSavePlugin.MaxSaveSlotsPerCharacter)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                ProperSavePlugin.InstanceLogger.LogWarning("Couldn't get save metadata for main menu");
                 ProperSavePlugin.InstanceLogger.LogError(ex.ToString());
                 return new List<SaveFileMetadata>();
             }
@@ -83,15 +113,65 @@ namespace ProperSave
                 return;
             }
 
-            var keep = SavesMetadata
+            var groupSaves = SavesMetadata
                 .Where(el => IsSameSaveGroup(el, keepMetadata))
                 .OrderByDescending(el => el.Header.SaveDate)
-                .Take(ProperSavePlugin.MaxSaveSlotsPerCharacter)
-                .ToHashSet();
-
-            var toDelete = SavesMetadata
-                .Where(el => IsSameSaveGroup(el, keepMetadata) && !keep.Contains(el))
                 .ToList();
+
+            var toDelete = new List<SaveFileMetadata>();
+
+            // 1. Remove older saves from the exact same scene at the exact same stageClearCount & paused time (e.g. returning to sad1 after trials)
+            foreach (var candidate in groupSaves.ToList())
+            {
+                if (candidate == keepMetadata || candidate.Header == null)
+                {
+                    continue;
+                }
+
+                if (candidate.Header.SceneName == keepMetadata.Header.SceneName &&
+                    candidate.Header.StageClearCount == keepMetadata.Header.StageClearCount &&
+                    candidate.Header.Time == keepMetadata.Header.Time)
+                {
+                    toDelete.Add(candidate);
+                    groupSaves.Remove(candidate);
+                }
+            }
+
+            // 2. While exceeding MaxSaveSlotsPerCharacter, prune redundant sub-stages sharing the same (StageClearCount, Time) before pruning unique stages
+            while (groupSaves.Count > ProperSavePlugin.MaxSaveSlotsPerCharacter)
+            {
+                var crowdedCluster = groupSaves
+                    .Where(el => el.Header != null)
+                    .GroupBy(el => (el.Header.StageClearCount, el.Header.Time))
+                    .Where(g => g.Count() >= 3)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault();
+
+                SaveFileMetadata victim = null;
+                if (crowdedCluster != null && groupSaves.Select(el => el.Header?.StageClearCount).Distinct().Count() > 1)
+                {
+                    victim = crowdedCluster
+                        .Where(el => el != keepMetadata)
+                        .OrderBy(el => el.Header.SaveDate)
+                        .FirstOrDefault();
+                }
+
+                if (victim == null)
+                {
+                    victim = groupSaves
+                        .Where(el => el != keepMetadata)
+                        .OrderBy(el => el.Header?.SaveDate ?? DateTime.MinValue)
+                        .FirstOrDefault();
+                }
+
+                if (victim == null)
+                {
+                    break;
+                }
+
+                toDelete.Add(victim);
+                groupSaves.Remove(victim);
+            }
 
             foreach (var metadata in toDelete)
             {
@@ -100,6 +180,7 @@ namespace ProperSave
                     if (metadata.FilePath.HasValue && ProperSavePlugin.SavesFileSystem.FileExists(metadata.FilePath.Value))
                     {
                         ProperSavePlugin.SavesFileSystem.DeleteFile(metadata.FilePath.Value);
+                        ProperSavePlugin.InstanceLogger.LogInfo($"Pruned old save file {metadata.FileName} (scene={metadata.Header?.SceneName}, stageClear={metadata.Header?.StageClearCount})");
                     }
                 }
                 catch (Exception ex)
@@ -124,6 +205,7 @@ namespace ProperSave
                 if (metadata.FilePath.HasValue && ProperSavePlugin.SavesFileSystem.FileExists(metadata.FilePath.Value))
                 {
                     ProperSavePlugin.SavesFileSystem.DeleteFile(metadata.FilePath.Value);
+                    ProperSavePlugin.InstanceLogger.LogInfo($"Deleted save file {metadata.FileName} (scene={metadata.Header?.SceneName}, stageClear={metadata.Header?.StageClearCount})");
                 }
 
                 SavesMetadata.Remove(metadata);

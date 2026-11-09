@@ -58,7 +58,7 @@ namespace ProperSave.Data
             }
             data.activeEquipmentSlot = inventory.activeEquipmentSlot;
             data.activeEquipmentSet = inventory.activeEquipmentSet.ToArray();
-            data.lastExtraEquipmentCount = inventory._lastExtraEquipmentCount;
+            data.lastExtraEquipmentCount = 0;
 
             return data;
         }
@@ -98,7 +98,6 @@ namespace ProperSave.Data
                 inventory.UpdateEffectiveItemStacks(itemIndex);
             }
 
-            inventory._lastExtraEquipmentCount = lastExtraEquipmentCount;
             inventory.HandleInventoryChanged();
             inventory.AddInfusionBonus(infusionBonus);
 
@@ -111,11 +110,15 @@ namespace ProperSave.Data
                 }
             }
 
-            inventory.activeEquipmentSet = activeEquipmentSet;
-            if (activeEquipmentSlot > 0)
+            if (activeEquipmentSet != null)
             {
-                inventory.SetActiveEquipmentSlot(activeEquipmentSlot);
+                for (byte i = 0; i < activeEquipmentSet.Length; i++)
+                {
+                    inventory.SetActiveEquipmentSlot(i);
+                    inventory.SetActiveEquipmentSet(activeEquipmentSet[i]);
+                }
             }
+            inventory.SetActiveEquipmentSlot(activeEquipmentSlot);
             inventory.SetDirtyBit(uint.MaxValue);
         }
 

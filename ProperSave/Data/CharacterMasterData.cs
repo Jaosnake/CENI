@@ -86,7 +86,15 @@ namespace ProperSave.Data
 
             foreach (var minion in minions)
             {
-                minion.LoadMinion(master);
+                try
+                {
+                    minion.LoadMinion(master);
+                }
+                catch (Exception ex)
+                {
+                    ProperSavePlugin.InstanceLogger.LogWarning($"Failed to load minion (masterIndex={minion?.masterIndex}), skipping it");
+                    ProperSavePlugin.InstanceLogger.LogError(ex);
+                }
             }
 
             var body = bodyIndex;

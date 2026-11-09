@@ -42,6 +42,7 @@ namespace ProperSave
         internal static void RegisterHooks()
         {
             //Replace with custom run load
+            On.RoR2.NetworkSession.BeginRun += NetworkSessionBeginRun;
             IL.RoR2.Run.Start += RunStart;
 
             //Restore team experience
@@ -50,8 +51,21 @@ namespace ProperSave
 
         internal static void UnregisterHooks()
         {
+            On.RoR2.NetworkSession.BeginRun -= NetworkSessionBeginRun;
             IL.RoR2.Run.Start -= RunStart;
             On.RoR2.TeamManager.Start -= TeamManagerStart;
+        }
+
+        private static Run NetworkSessionBeginRun(On.RoR2.NetworkSession.orig_BeginRun orig, NetworkSession self, Run runPrefabComponent, RuleBook ruleBook, ulong seed)
+        {
+            if (IsLoading)
+            {
+                var runData = CurrentSave.RunData;
+                ruleBook = runData.ruleBook.Load();
+                seed = runData.seed;
+            }
+
+            return orig(self, runPrefabComponent, ruleBook, seed);
         }
 
         private static void TeamManagerStart(On.RoR2.TeamManager.orig_Start orig, TeamManager self)

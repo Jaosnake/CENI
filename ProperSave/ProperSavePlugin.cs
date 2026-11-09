@@ -26,7 +26,7 @@ namespace ProperSave
     {
         public const string GUID = "com.Jaosnake.CENI";
         public const string Name = "C.E.N.I";
-        public const string Version = "1.0.1";
+        public const string Version = "1.0.4";
         internal const int MaxSaveSlotsPerCharacter = 5;
 
         private static readonly char[] invalidSubDirectoryCharacters = new[] { '\\', '/', '.' };
@@ -70,6 +70,7 @@ namespace ProperSave
             Loading.RegisterHooks();
 
             LobbyUI.RegisterHooks();
+            MainMenuUI.RegisterHooks();
 
             LostNetworkUser.Subscribe();
             
@@ -134,6 +135,7 @@ namespace ProperSave
             Loading.UnregisterHooks();
 
             LobbyUI.UnregisterHooks();
+            MainMenuUI.UnregisterHooks();
 
             LostNetworkUser.Unsubscribe();
             
