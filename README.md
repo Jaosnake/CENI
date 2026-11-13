@@ -1,6 +1,6 @@
 # C.E.N.I - Chrono-Enhanced Nexus of Iteration
 
-![Version](https://img.shields.io/badge/%F0%9F%97%82%EF%B8%8F%20Version-1.0.4-blue)
+![Version](https://img.shields.io/badge/%F0%9F%97%82%EF%B8%8F%20Version-1.0.5-blue)
 
 
 **C.E.N.I** is a Risk of Rain 2 save-state mod based on ProperSave, expanded with a save selection UI, controller navigation and Brazilian Portuguese support.
@@ -11,7 +11,7 @@ It saves your run at the start of each stage. From the character select lobby, c
 
 - Keeps up to 5 save states per character/lobby group, with smart pruning so multi-scene Hidden Realm events do not overwrite normal stage saves.
 - Shows a selectable save list with character, stage name, stage number, run time and difficulty.
-- Shows the survivor portrait when the character or mod provides one.
+- Shows the survivor portrait when available. Caches the displayed name and a small copy separately, and displays the portrait in grayscale with a red X if that character is unavailable.
 - Sorts saves by most recent save date first, then stage and run time.
 - Keeps save history after death instead of deleting the latest save immediately.
 - Supports English for all languages and Brazilian Portuguese when `pt-BR` is selected.
@@ -46,6 +46,8 @@ Saves are shown with the most recent save at the top, followed by highest stage 
 
 ## Notes
 
+If a saved character is missing, the save remains visible and cannot be loaded until its character mod is restored. The portrait and displayed name are available only if cached while the character was installed; otherwise the internal identifier is shown. Older index-based saves may not identify a changed character reliably. C.E.N.I does not block loading for missing item mods; changing mods may affect restored items and other run content.
+
 Only the host needs the mod for multiplayer loading. Existing ProperSave-style save files use the same save format and storage path. Loading a save after changing the installed mod list can cause incompatibilities.
 
 Do not install this together with the original ProperSave unless you intentionally want to test conflicts. C.E.N.I is intended to replace it in a profile.
@@ -66,7 +68,7 @@ O mod salva a jogatina no início de cada fase. No lobby de seleção de persona
 
 - Mantém até 5 save states por personagem/grupo do lobby, com poda inteligente para que subfases de eventos/Reinos Secretos não apaguem os saves das fases normais.
 - Exibe uma lista selecionável com personagem, nome da fase, número da fase, tempo de jogo e dificuldade.
-- Mostra o retrato do sobrevivente quando o personagem ou mod disponibiliza um.
+- Mostra o retrato do sobrevivente quando disponível. Guarda o nome exibido e uma cópia pequena separadamente e exibe o retrato em preto e branco com um X vermelho se o personagem estiver indisponível.
 - Organiza os saves pela data de salvamento mais recente no topo, seguida da fase e tempo de jogo.
 - Mantém o histórico de saves depois da morte, em vez de apagar o último save imediatamente.
 - Usa português brasileiro quando `pt-BR` está selecionado e inglês como alternativa para os demais idiomas.
@@ -100,6 +102,8 @@ Os saves aparecem com o salvamento mais recente no topo, seguido pela fase mais 
 - `en`: alternativa em inglês para todos os outros idiomas
 
 ## Observações
+
+Se um personagem salvo estiver ausente, o save continua visível e não pode ser carregado até o mod do personagem ser restaurado. O retrato e o nome exibido só aparecem se tiverem sido guardados enquanto o personagem estava instalado; caso contrário, aparece o identificador interno. Saves antigos baseados em índices podem não identificar com segurança um personagem alterado. O C.E.N.I não bloqueia a partida por mods de itens ausentes; mudanças de mods podem afetar itens e outros conteúdos restaurados.
 
 Somente o anfitrião precisa do mod para carregar uma partida multijogador. Saves no formato do ProperSave usam o mesmo formato e local de armazenamento. Carregar um save após alterar a lista de mods instalada pode causar incompatibilidades.
 

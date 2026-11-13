@@ -1,3 +1,10 @@
+**1.0.5**
+
+- Saves whose survivor is unavailable stay visible and show a warning instead of starting with a missing character. Restore the character mod to load the save.
+- Caches the displayed survivor name and a small portrait beside the save when available; an unavailable character is displayed in grayscale with a red X when a cached portrait exists. Older saves receive a cached portrait when viewed while the character is installed.
+- Excludes saves with missing characters or changed content from automatic cleanup. Fixed an error path in forced loading.
+- Keeps the existing save format. Item mods are not checked or blocked; changes to the mod list can still affect restored content.
+
 **1.0.4**
 
 - Added a **Load Save** button to the main menu, right below Multiplayer. It opens the same save list as the lobby Load option (character, stage, number, time, difficulty, portrait and delete) and loads the chosen save straight into the run, without going through the lobby first. It lists the most recent saves of your profile from any character and stays disabled when there are no saves. The Load option in the Singleplayer lobby still works as before.

@@ -155,7 +155,7 @@ namespace ProperSave
 
         internal static void StartLoadFromMainMenu(SaveFileMetadata save)
         {
-            if (loadInProgress || save?.Header == null)
+            if (loadInProgress || save?.Header == null || save.Header.CannotSafelyLoad)
             {
                 return;
             }

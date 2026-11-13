@@ -23,6 +23,10 @@ namespace ProperSave
         public int Time { get; internal set; }
         public int StageClearCount { get; internal set; }
         public string ContentHash { get; internal set; }
+        public bool UsesResilientFormat { get; internal set; }
+        public bool HasUnavailableCharacter => Users != null && Users.Any(user => user == null || user.MissingBody);
+        public bool HasUnsafeLegacyContent => !UsesResilientFormat && ContentHash != ProperSavePlugin.ContentHash;
+        public bool CannotSafelyLoad => HasUnavailableCharacter;
 
         public void FillFromCurrentRun()
         {
@@ -47,6 +51,7 @@ namespace ProperSave
 
             var version = reader.ReadInt32();
             var resilient = reader.ReadBoolean();
+            header.UsesResilientFormat = resilient;
 
             var sharedStringsOffset = reader.ReadInt64();
             var currentOffset = reader.BaseStream.Position;

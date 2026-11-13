@@ -140,7 +140,19 @@ namespace ProperSave
                 yield break;
             }
 
-            metadata.ReadBody();
+            if (metadata.Header == null || metadata.Header.CannotSafelyLoad)
+            {
+                ProperSavePlugin.InstanceLogger.LogWarning("[C.E.N.I] Save not loaded: character missing.");
+                yield break;
+            }
+
+            try { metadata.ReadBody(); }
+            catch (Exception ex)
+            {
+                ProperSavePlugin.InstanceLogger.LogWarning("[C.E.N.I] Cannot inspect save; loading blocked.");
+                ProperSavePlugin.InstanceLogger.LogError(ex);
+                yield break;
+            }
             ProperSavePlugin.CurrentSave = metadata;
             IsLoading = true;
 
@@ -167,6 +179,12 @@ namespace ProperSave
             try
             {
                 metadata.ReadForce(path);
+                if (metadata.Header == null || metadata.Header.CannotSafelyLoad)
+                {
+                    ProperSavePlugin.InstanceLogger.LogWarning("[C.E.N.I] Force load blocked: character missing.");
+                    ResetLoading();
+                    return;
+                }
                 ProperSavePlugin.CurrentSave = metadata;
                 IsLoading = true;
             }
@@ -175,6 +193,7 @@ namespace ProperSave
                 Debug.LogWarning($"Failed to load save file at path \"{path}\"");
                 ProperSavePlugin.InstanceLogger.LogError(e);
                 ResetLoading();
+                return;
             }
 
             if (metadata.Header.ContentHash != ProperSavePlugin.ContentHash)

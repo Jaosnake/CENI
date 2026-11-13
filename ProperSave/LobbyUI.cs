@@ -215,6 +215,22 @@ namespace ProperSave
 
         private static void StartLoad(SaveFileMetadata save)
         {
+            if (save?.Header == null || save.Header.CannotSafelyLoad)
+            {
+                ShowUnavailableSaveDialog(save);
+                return;
+            }
+            try
+            {
+                save.ReadBody();
+            }
+            catch (Exception ex)
+            {
+                ProperSavePlugin.InstanceLogger.LogWarning("[C.E.N.I] Cannot inspect save; loading blocked.");
+                ProperSavePlugin.InstanceLogger.LogError(ex);
+                ShowUnavailableSaveDialog(save);
+                return;
+            }
             if (mainMenuMode)
             {
                 MainMenuUI.StartLoadFromMainMenu(save);
@@ -223,6 +239,23 @@ namespace ProperSave
             {
                 ProperSavePlugin.Instance.StartCoroutine(Loading.LoadLobby(save));
             }
+        }
+
+        private static void ShowUnavailableSaveDialog(SaveFileMetadata save)
+        {
+            var dialog = SimpleDialogBox.Create(EventSystem.current as MPEventSystem);
+            if (dialog == null) return;
+            var names = save?.Header?.Users == null ? "" : string.Join(", ", save.Header.Users
+                .Where(user => user != null && user.MissingBody)
+                .Select(user => (save.Header.Users.Length == 1 ? PortraitCache.GetSavedName(save) : null) ?? user.SavedBodyName ?? "?"));
+            var message = save?.Header?.HasUnavailableCharacter == true
+                ? Language.GetStringFormatted("CENI_MISSING_CHARACTER_DESCRIPTION", names)
+                : Language.GetString("CENI_CANNOT_INSPECT_SAVE");
+            dialog.headerToken = new SimpleDialogBox.TokenParamsPair { token = "CENI_UNAVAILABLE_SAVE_TITLE" };
+            dialog.descriptionToken = new SimpleDialogBox.TokenParamsPair { token = message };
+            dialog.AddActionButton(() => { }, LanguageConsts.PROPER_SAVE_SELECT_SAVE_CANCEL, destroyDialog: true);
+            AddCloseWatcher(dialog);
+            ProperSavePlugin.Instance.StartCoroutine(DelayedSaveDialogLayout(dialog, confirmLayout: true));
         }
 
         private static void UpdateLobbyControls(NetworkUser exceptUser = null)
@@ -307,7 +340,7 @@ namespace ProperSave
                 var networkUser = NetworkUser.readOnlyInstancesList.FirstOrDefault(user => userData.UserId.Load().Equals(user.id));
                 var body = BodyCatalog.GetBodyPrefab(userData.Body);
                 var survivor = SurvivorCatalog.FindSurvivorDefFromBody(body);
-                builder.Append(Language.GetStringFormatted(LanguageConsts.PROPER_SAVE_TOOLTIP_LOAD_DESCRIPTION_CHARACTER, networkUser?.userName, survivor != null ? Language.GetString(survivor.displayNameToken) : ""));
+                builder.Append(Language.GetStringFormatted(LanguageConsts.PROPER_SAVE_TOOLTIP_LOAD_DESCRIPTION_CHARACTER, networkUser?.userName, survivor != null ? Language.GetString(survivor.displayNameToken) : (userData.SavedBodyName ?? "?")));
             }
 
             var stage = SceneCatalog.GetSceneDefFromSceneName(header.SceneName);
@@ -345,7 +378,7 @@ namespace ProperSave
                     StartLoad(captured);
                 }, LanguageConsts.PROPER_SAVE_TITLE_LOAD, destroyDialog: true);
 
-                SetLastButtonContent(dialog, GetSaveButtonDescription(save), GetSavePortrait(save));
+                SetLastButtonContent(dialog, GetSaveButtonDescription(save), GetSavePortrait(save), save.Header.HasUnavailableCharacter);
             }
 
             dialog.AddActionButton(() =>
@@ -382,7 +415,7 @@ namespace ProperSave
                     ShowDeleteConfirmDialog(captured);
                 }, LanguageConsts.PROPER_SAVE_DELETE_SAVE, destroyDialog: true);
 
-                SetLastButtonContent(dialog, GetSaveButtonDescription(save), GetSavePortrait(save));
+                SetLastButtonContent(dialog, GetSaveButtonDescription(save), GetSavePortrait(save), save.Header.HasUnavailableCharacter);
             }
 
             dialog.AddActionButton(() => { }, LanguageConsts.PROPER_SAVE_SELECT_SAVE_CANCEL, destroyDialog: true);
@@ -430,7 +463,7 @@ namespace ProperSave
             {
                 var body = BodyCatalog.GetBodyPrefab(header.Users[0].Body);
                 var survivor = SurvivorCatalog.FindSurvivorDefFromBody(body);
-                character = survivor != null ? Language.GetString(survivor.displayNameToken) : "";
+                character = survivor != null ? Language.GetString(survivor.displayNameToken) : (PortraitCache.GetSavedName(saveMetadata) ?? header.Users[0].SavedBodyName ?? "?");
             }
 
             var stage = SceneCatalog.GetSceneDefFromSceneName(header.SceneName);
@@ -444,7 +477,7 @@ namespace ProperSave
                 (header.StageClearCount + 1).ToString(),
                 $"{(time / 60):00}:{(time % 60):00}",
                 difficulty != null ? Language.GetString(difficulty.nameToken) : "",
-                "");
+                header.CannotSafelyLoad ? Language.GetString("CENI_UNAVAILABLE_SAVE_TITLE") : "");
         }
 
         private static Texture GetSavePortrait(SaveFileMetadata saveMetadata)
@@ -457,9 +490,14 @@ namespace ProperSave
                     return null;
                 }
 
+                if (header.HasUnavailableCharacter)
+                    return PortraitCache.GetMissing(saveMetadata);
                 var body = BodyCatalog.GetBodyPrefab(header.Users[0].Body);
                 var characterBody = body ? body.GetComponent<CharacterBody>() : null;
-                return characterBody ? characterBody.portraitIcon : null;
+                var portrait = characterBody ? characterBody.portraitIcon : null;
+                PortraitCache.RememberName(saveMetadata);
+                if (portrait) PortraitCache.Remember(saveMetadata, portrait);
+                return portrait;
             }
             catch
             {
@@ -467,7 +505,7 @@ namespace ProperSave
             }
         }
 
-        private static void SetLastButtonContent(SimpleDialogBox dialog, string text, Texture portrait)
+        private static void SetLastButtonContent(SimpleDialogBox dialog, string text, Texture portrait, bool unavailable)
         {
             try
             {
@@ -480,7 +518,7 @@ namespace ProperSave
                 var button = container.GetChild(container.childCount - 1);
                 if (portrait != null)
                 {
-                    AddPortraitToButton(button, portrait);
+                    AddPortraitToButton(button, portrait, unavailable);
                 }
 
                 foreach (var languageController in button.GetComponentsInChildren<LanguageTextMeshController>())
@@ -510,7 +548,7 @@ namespace ProperSave
             }
         }
 
-        private static void AddPortraitToButton(Transform button, Texture portrait)
+        private static void AddPortraitToButton(Transform button, Texture portrait, bool unavailable)
         {
             var portraitObject = new GameObject("[CENI] Portrait", typeof(RectTransform), typeof(RawImage));
             var rect = portraitObject.GetComponent<RectTransform>();
@@ -525,6 +563,23 @@ namespace ProperSave
             image.texture = portrait;
             image.color = Color.white;
             image.raycastTarget = false;
+            if (unavailable)
+            {
+                // A cross overlay remains visible even on very dark portraits.
+                foreach (var angle in new[] { 45f, -45f })
+                {
+                    var bar = new GameObject("[CENI] Missing", typeof(RectTransform), typeof(Image));
+                    var crossRect = bar.GetComponent<RectTransform>();
+                    crossRect.SetParent(rect, false);
+                    crossRect.anchorMin = crossRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    crossRect.anchoredPosition = Vector2.zero;
+                    crossRect.sizeDelta = new Vector2(70f, 6f);
+                    crossRect.localRotation = Quaternion.Euler(0, 0, angle);
+                    var cross = bar.GetComponent<Image>();
+                    cross.color = new Color(0.9f, 0.08f, 0.08f, 1f);
+                    cross.raycastTarget = false;
+                }
+            }
         }
 
         private static IEnumerator DelayedSaveDialogLayout(SimpleDialogBox dialog, bool confirmLayout = false)

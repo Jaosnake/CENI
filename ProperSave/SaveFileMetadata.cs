@@ -34,6 +34,7 @@ namespace ProperSave
             BodyOffset = 0;
 
             Header.FillFromCurrentRun();
+            Header.UsesResilientFormat = ProperSavePlugin.Resilient.Value;
             Body.FillFromCurrentRun();
 
             if (FileName is null)
@@ -61,11 +62,13 @@ namespace ProperSave
                 }
 
                 return SavesMetadata
-                    .Where(el => IsSameSaveGroup(el, users, bodies, profile, gameMode))
+                    .Where(el => IsSameSaveGroup(el, users, bodies, profile, gameMode) ||
+                        (el.Header != null && el.Header.CannotSafelyLoad && el.Header.UserProfileId == profile &&
+                         el.Header.GameMode == gameMode && el.Header.Users != null && el.Header.Users.Length == users.Count &&
+                         users.DifferenceCount(el.Header.Users.Select(e => e?.UserId?.Load() ?? default)) == 0))
                     .OrderByDescending(el => el.Header.SaveDate)
                     .ThenByDescending(el => el.Header.StageClearCount)
                     .ThenByDescending(el => el.Header.Time)
-                    .Take(ProperSavePlugin.MaxSaveSlotsPerCharacter)
                     .ToList();
             }
             catch (Exception ex)
@@ -95,7 +98,6 @@ namespace ProperSave
                     .OrderByDescending(el => el.Header.SaveDate)
                     .ThenByDescending(el => el.Header.StageClearCount)
                     .ThenByDescending(el => el.Header.Time)
-                    .Take(ProperSavePlugin.MaxSaveSlotsPerCharacter)
                     .ToList();
             }
             catch (Exception ex)
@@ -108,13 +110,13 @@ namespace ProperSave
 
         internal static void PruneCurrentSaveGroup(SaveFileMetadata keepMetadata)
         {
-            if (keepMetadata?.Header == null)
+            if (keepMetadata?.Header == null || keepMetadata.Header.CannotSafelyLoad)
             {
                 return;
             }
 
             var groupSaves = SavesMetadata
-                .Where(el => IsSameSaveGroup(el, keepMetadata))
+                .Where(el => IsSameSaveGroup(el, keepMetadata) && (el == keepMetadata || el.CanPruneSafely()))
                 .OrderByDescending(el => el.Header.SaveDate)
                 .ToList();
 
@@ -190,6 +192,23 @@ namespace ProperSave
                 }
 
                 SavesMetadata.Remove(metadata);
+            }
+        }
+
+        private bool CanPruneSafely()
+        {
+            if (Header == null || Header.CannotSafelyLoad || Header.ContentHash != ProperSavePlugin.ContentHash)
+                return false;
+            try
+            {
+                ReadBody();
+                return Body != null;
+            }
+            catch (Exception ex)
+            {
+                ProperSavePlugin.InstanceLogger.LogWarning("[C.E.N.I] Save excluded from automatic cleanup because it could not be checked safely.");
+                ProperSavePlugin.InstanceLogger.LogError(ex);
+                return false;
             }
         }
 
@@ -349,6 +368,19 @@ namespace ProperSave
             using var fileStream = ProperSavePlugin.SavesFileSystem.OpenFile(FilePath.Value, FileMode.Create, FileAccess.Write);
             memoryStream.Seek(0, SeekOrigin.Begin);
             memoryStream.CopyTo(fileStream);
+            try
+            {
+                var user = Header?.Users?.FirstOrDefault();
+                var body = user != null ? BodyCatalog.GetBodyPrefab(user.Body) : null;
+                var character = body ? body.GetComponent<CharacterBody>() : null;
+                PortraitCache.RememberName(this);
+                if (character && character.portraitIcon)
+                    PortraitCache.Remember(this, character.portraitIcon);
+            }
+            catch (Exception ex)
+            {
+                ProperSavePlugin.InstanceLogger.LogWarning("[C.E.N.I] Could not prepare save portrait: " + ex.Message);
+            }
         }
 
         internal void ReadBody()

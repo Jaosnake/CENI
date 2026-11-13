@@ -9,6 +9,8 @@ namespace ProperSave.Data
     public class HeaderUserData
     {
         public BodyIndex Body { get; set; }
+        public string SavedBodyName { get; set; }
+        public bool MissingBody { get; set; }
         public UserIDData UserId { get; set; }
 
         public static HeaderUserData Create(PlayerCharacterMasterController master)
@@ -34,7 +36,17 @@ namespace ProperSave.Data
         internal static HeaderUserData Read(ReaderContext context)
         {
             var data = new HeaderUserData();
-            data.Body = SharedIndexHelpers.ResolveBody(context.Reader.ReadInt32(), context);
+            var savedIndex = context.Reader.ReadInt32();
+            data.Body = SharedIndexHelpers.ResolveBody(savedIndex, context);
+            if (context.Resilient && savedIndex >= 0 && savedIndex < context.SharedStrings.Length)
+            {
+                data.SavedBodyName = context.SharedStrings[savedIndex];
+                data.MissingBody = data.Body == BodyIndex.None;
+            }
+            else if (savedIndex >= 0 && !context.Resilient)
+            {
+                data.MissingBody = !BodyCatalog.GetBodyPrefab(data.Body);
+            }
             data.UserId = UserIDData.Read(context);
 
             return data;
